@@ -50,6 +50,7 @@ if __name__ == '__main__':
     free_leases = Gauge('dhcp_stats_available', 'DHCP Usage: free leases', ['network'])
     used_leases = Gauge('dhcp_stats_used', 'DHCP Usage: used lease', ['network'])
     sessions = Gauge('conntrack_sessions', 'Tracked session in conntrack')
+    max_session = Gauge('conntrack_max_sessions', 'Max tracked session in conntrack')
 
     start_http_server(9097)
 
@@ -65,6 +66,9 @@ if __name__ == '__main__':
         for network, data in result.items():
             free_leases.labels(network=network).set(data['avail'])
             used_leases.labels(network=network).set(data['used'])
+        # conntrack
         command_result = c.send_command('sudo conntrack -C')
         sessions.set(command_result)
+        # conntrack max
+        max_session.set(c.send_command('sudo cat /proc/sys/net/netfilter/nf_conntrack_max'))
         time.sleep(30)
